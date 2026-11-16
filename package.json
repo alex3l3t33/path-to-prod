@@ -1,0 +1,36 @@
+{
+  "name": "path-to-prod",
+  "version": "0.1.0",
+  "description": "Probabilistic Jira delivery forecasts for Obsidian.",
+  "author": "Alexandre",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alex3l3t33/path-to-prod.git"
+  },
+  "homepage": "https://github.com/alex3l3t33/path-to-prod#readme",
+  "bugs": "https://github.com/alex3l3t33/path-to-prod/issues",
+  "type": "module",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc --noEmit && node esbuild.config.mjs production",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "check": "npm run lint && npm run build && npm test"
+  },
+  "keywords": [
+    "obsidian",
+    "jira",
+    "forecasting",
+    "delivery"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "esbuild": "^0.28.2",
+    "eslint": "^9.39.5",
+    "eslint-plugin-obsidianmd": "^0.6.0",
+    "obsidian": "^1.10.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.10"
+  }
+}
