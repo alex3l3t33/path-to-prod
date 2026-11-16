@@ -160,42 +160,42 @@ export class PathToProdSettingTab extends PluginSettingTab {
     const jiraItems: SettingDefinition[] = [
       item("Jira site URL", "Use the Jira root URL, for example https://company.atlassian.net, not a project or board URL.", (setting) =>
         setting.addText((text) =>
-          text.setPlaceholder("https://company.atlassian.net").setValue(this.plugin.settings.jiraBaseUrl).onChange(async (value) => {
+          text.setPlaceholder("https://company.atlassian.net").setValue(this.plugin.settings.jiraBaseUrl).onChange((value) => {
             this.plugin.settings.jiraBaseUrl = value.trim();
-            await save();
+            void save();
           })
         )
       ),
       item("Token holder", "Human-readable owner of the Atlassian API token.", (setting) =>
         setting.addText((text) =>
-          text.setPlaceholder("Token holder name").setValue(this.plugin.settings.jiraTokenHolder).onChange(async (value) => {
+          text.setPlaceholder("Token holder name").setValue(this.plugin.settings.jiraTokenHolder).onChange((value) => {
             this.plugin.settings.jiraTokenHolder = value.trim();
-            await save();
+            void save();
           })
         )
       ),
       item("Atlassian email (optional)", "Required for an Atlassian Cloud API token. Leave blank to send the token as a Bearer credential.", (setting) =>
         setting.addText((text) =>
-          text.setValue(this.plugin.settings.jiraEmail).onChange(async (value) => {
+          text.setValue(this.plugin.settings.jiraEmail).onChange((value) => {
             this.plugin.settings.jiraEmail = value.trim();
-            await save();
+            void save();
           })
         )
       ),
       item("API or Bearer token", "Use a dedicated, revocable token. It is stored in this vault's local plugin data.", (setting) =>
         setting.addText((text) => {
           text.inputEl.type = "password";
-          text.setValue(this.plugin.settings.jiraApiToken).onChange(async (value) => {
+          text.setValue(this.plugin.settings.jiraApiToken).onChange((value) => {
             this.plugin.settings.jiraApiToken = value.trim();
-            await save();
+            void save();
           });
         })
       ),
       item("Company Jira project", "Project key or exact project name used to replace {{project}} in JQL, for example ACME.", (setting) =>
         setting.addText((text) =>
-          text.setPlaceholder("ACME").setValue(this.plugin.settings.jiraProjectKey).onChange(async (value) => {
+          text.setPlaceholder("ACME").setValue(this.plugin.settings.jiraProjectKey).onChange((value) => {
             this.plugin.settings.jiraProjectKey = value.trim();
-            await save();
+            void save();
           })
         )
       ),
@@ -220,26 +220,26 @@ export class PathToProdSettingTab extends PluginSettingTab {
       item("Completed-ticket JQL", "Used to learn historical stage durations. Use {{project}} for the configured Jira project.", (setting) =>
         setting.addTextArea((text) => {
           text.inputEl.rows = 3;
-          text.setValue(this.plugin.settings.historyJql).onChange(async (value) => {
+          text.setValue(this.plugin.settings.historyJql).onChange((value) => {
             this.plugin.settings.historyJql = value.trim();
-            await save();
+            void save();
           });
         })
       ),
       item("Goal JQL", "Issues whose delivery dates are forecast. Use {{project}} for the configured Jira project.", (setting) =>
         setting.addTextArea((text) => {
           text.inputEl.rows = 3;
-          text.setValue(this.plugin.settings.goalJql).onChange(async (value) => {
+          text.setValue(this.plugin.settings.goalJql).onChange((value) => {
             this.plugin.settings.goalJql = value.trim();
-            await save();
+            void save();
           });
         })
       ),
       item("Historical issue limit", "Start with 100–300 completed issues from one stable team workflow.", (setting) =>
         setting.addText((text) =>
-          text.setValue(String(this.plugin.settings.historyLimit)).onChange(async (value) => {
+          text.setValue(String(this.plugin.settings.historyLimit)).onChange((value) => {
             this.plugin.settings.historyLimit = Math.max(20, Math.round(numberOr(value, DEFAULT_SETTINGS.historyLimit)));
-            await save();
+            void save();
           })
         )
       )
@@ -249,9 +249,9 @@ export class PathToProdSettingTab extends PluginSettingTab {
       item(`${title(stage)} statuses`, "Comma-separated Jira status names.", (setting) =>
         setting.addTextArea((text) => {
           text.inputEl.rows = 2;
-          text.setValue(this.plugin.settings.stageStatuses[stage].join(", ")).onChange(async (value) => {
+          text.setValue(this.plugin.settings.stageStatuses[stage].join(", ")).onChange((value) => {
             this.plugin.settings.stageStatuses[stage] = parseCsv(value);
-            await save();
+            void save();
           });
         })
       )
@@ -259,9 +259,9 @@ export class PathToProdSettingTab extends PluginSettingTab {
     workflowItems.push(
       item("Completed statuses", "Comma-separated Jira status names that mean production is complete.", (setting) =>
         setting.addText((text) =>
-          text.setValue(this.plugin.settings.doneStatuses.join(", ")).onChange(async (value) => {
+          text.setValue(this.plugin.settings.doneStatuses.join(", ")).onChange((value) => {
             this.plugin.settings.doneStatuses = parseCsv(value);
-            await save();
+            void save();
           })
         )
       )
@@ -271,9 +271,9 @@ export class PathToProdSettingTab extends PluginSettingTab {
       item("Agility methodology", "Auto detects Scrum from Jira sprint assignments; Kanban keeps continuous-flow dates.", (setting) =>
         setting.addDropdown((dropdown) =>
           dropdown.addOption("auto", "Auto detect").addOption("scrum", "Scrum").addOption("kanban", "Kanban")
-            .setValue(this.plugin.settings.agilityMethod).onChange(async (value) => {
+            .setValue(this.plugin.settings.agilityMethod).onChange((value) => {
               this.plugin.settings.agilityMethod = value as AgilityMethodSetting;
-              await save();
+              void save();
               this.update();
             })
         )
@@ -282,9 +282,9 @@ export class PathToProdSettingTab extends PluginSettingTab {
         ...item("Sprint length", "Length in weeks. Development forecasts align to a sprint boundary.", (setting) =>
           setting.addDropdown((dropdown) => {
             for (let weeks = 1; weeks <= 6; weeks += 1) dropdown.addOption(String(weeks), `${weeks} week${weeks === 1 ? "" : "s"}`);
-            dropdown.setValue(String(this.plugin.settings.sprintLengthWeeks)).onChange(async (value) => {
+            dropdown.setValue(String(this.plugin.settings.sprintLengthWeeks)).onChange((value) => {
               this.plugin.settings.sprintLengthWeeks = Number(value);
-              await save();
+              void save();
             });
           })
         ),
@@ -293,9 +293,9 @@ export class PathToProdSettingTab extends PluginSettingTab {
       {
         ...item("Sprint anchor date", "Start of a known sprint in YYYY-MM-DD format. Leave blank to use Monday of the forecast week.", (setting) =>
           setting.addText((text) =>
-            text.setPlaceholder("2026-11-16").setValue(this.plugin.settings.sprintAnchorDate).onChange(async (value) => {
+            text.setPlaceholder("2026-11-16").setValue(this.plugin.settings.sprintAnchorDate).onChange((value) => {
               this.plugin.settings.sprintAnchorDate = value.trim();
-              await save();
+              void save();
             })
           )
         ),
@@ -304,9 +304,9 @@ export class PathToProdSettingTab extends PluginSettingTab {
       {
         ...item("Release at sprint boundary", "In Scrum mode, hold production until the next sprint end before applying release weekdays.", (setting) =>
           setting.addToggle((toggle) =>
-            toggle.setValue(this.plugin.settings.scrumReleaseAtSprintEnd).onChange(async (value) => {
+            toggle.setValue(this.plugin.settings.scrumReleaseAtSprintEnd).onChange((value) => {
               this.plugin.settings.scrumReleaseAtSprintEnd = value;
-              await save();
+              void save();
             })
           )
         ),
@@ -314,25 +314,25 @@ export class PathToProdSettingTab extends PluginSettingTab {
       },
       item("Use developer history", "Give same-assignee tickets a small similarity boost and show historical throughput context. Team history remains the fallback.", (setting) =>
         setting.addToggle((toggle) =>
-          toggle.setValue(this.plugin.settings.useAssigneeHistory).onChange(async (value) => {
+          toggle.setValue(this.plugin.settings.useAssigneeHistory).onChange((value) => {
             this.plugin.settings.useAssigneeHistory = value;
-            await save();
+            void save();
           })
         )
       ),
       item("Team size", undefined, (setting) =>
         setting.addText((text) =>
-          text.setValue(String(this.plugin.settings.teamSize)).onChange(async (value) => {
+          text.setValue(String(this.plugin.settings.teamSize)).onChange((value) => {
             this.plugin.settings.teamSize = Math.max(1, Math.round(numberOr(value, DEFAULT_SETTINGS.teamSize)));
-            await save();
+            void save();
           })
         )
       ),
       item("Focus factor", "Fraction of a workday available for goal work, from 0.1 to 1.", (setting) =>
         setting.addText((text) =>
-          text.setValue(String(this.plugin.settings.focusFactor)).onChange(async (value) => {
+          text.setValue(String(this.plugin.settings.focusFactor)).onChange((value) => {
             this.plugin.settings.focusFactor = Math.min(1, Math.max(0.1, numberOr(value, DEFAULT_SETTINGS.focusFactor)));
-            await save();
+            void save();
           })
         )
       )
@@ -340,9 +340,9 @@ export class PathToProdSettingTab extends PluginSettingTab {
     capacityItems.push(...stages.map((stage) =>
       item(`${title(stage)} parallel capacity`, "Approximate number of tickets the team can actively handle at once.", (setting) =>
         setting.addText((text) =>
-          text.setValue(String(this.plugin.settings.stageCapacity[stage])).onChange(async (value) => {
+          text.setValue(String(this.plugin.settings.stageCapacity[stage])).onChange((value) => {
             this.plugin.settings.stageCapacity[stage] = Math.max(0.25, numberOr(value, DEFAULT_SETTINGS.stageCapacity[stage]));
-            await save();
+            void save();
           })
         )
       )
@@ -351,44 +351,44 @@ export class PathToProdSettingTab extends PluginSettingTab {
       item("Holiday dates", "One YYYY-MM-DD date per line.", (setting) =>
         setting.addTextArea((text) => {
           text.inputEl.rows = 5;
-          text.setValue(this.plugin.settings.holidays.join("\n")).onChange(async (value) => {
+          text.setValue(this.plugin.settings.holidays.join("\n")).onChange((value) => {
             this.plugin.settings.holidays = parseDateLines(value);
-            await save();
+            void save();
           });
         })
       ),
       item("Crew leave", "One inclusive period per line: Person | YYYY-MM-DD | YYYY-MM-DD", (setting) =>
         setting.addTextArea((text) => {
           text.inputEl.rows = 6;
-          text.setValue(this.plugin.settings.leave.map((entry) => `${entry.person} | ${entry.start} | ${entry.end}`).join("\n")).onChange(async (value) => {
+          text.setValue(this.plugin.settings.leave.map((entry) => `${entry.person} | ${entry.start} | ${entry.end}`).join("\n")).onChange((value) => {
             this.plugin.settings.leave = parseLeaveLines(value);
-            await save();
+            void save();
           });
         })
       ),
       item("Holiday calendar feeds", "Optional HTTPS ICS URLs, one per line. All-day events are treated as non-working holidays.", (setting) =>
         setting.addTextArea((text) => {
           text.inputEl.rows = 4;
-          text.setPlaceholder("https://calendar.example/holidays.ics").setValue(this.plugin.settings.holidayCalendarUrls.join("\n")).onChange(async (value) => {
+          text.setPlaceholder("https://calendar.example/holidays.ics").setValue(this.plugin.settings.holidayCalendarUrls.join("\n")).onChange((value) => {
             this.plugin.settings.holidayCalendarUrls = parseDateLines(value);
-            await save();
+            void save();
           });
         })
       ),
       item("Crew calendar feeds", "Private all-day leave feeds: Person | HTTPS ICS URL. URLs may contain secret tokens and are stored in plugin data.", (setting) =>
         setting.addTextArea((text) => {
           text.inputEl.rows = 5;
-          text.setPlaceholder("Ada | https://calendar.example/ada-leave.ics").setValue(this.plugin.settings.crewCalendarFeeds.map((feed) => `${feed.person} | ${feed.url}`).join("\n")).onChange(async (value) => {
+          text.setPlaceholder("Ada | https://calendar.example/ada-leave.ics").setValue(this.plugin.settings.crewCalendarFeeds.map((feed) => `${feed.person} | ${feed.url}`).join("\n")).onChange((value) => {
             this.plugin.settings.crewCalendarFeeds = parseCrewFeedLines(value);
-            await save();
+            void save();
           });
         })
       ),
       item("Production release weekdays", "Comma-separated ISO weekdays: 1 Monday … 7 Sunday.", (setting) =>
         setting.addText((text) =>
-          text.setValue(this.plugin.settings.releaseWeekdays.join(", ")).onChange(async (value) => {
+          text.setValue(this.plugin.settings.releaseWeekdays.join(", ")).onChange((value) => {
             this.plugin.settings.releaseWeekdays = parseCsv(value).map(Number).filter((day) => Number.isInteger(day) && day >= 1 && day <= 7);
-            await save();
+            void save();
           })
         )
       )

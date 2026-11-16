@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- Keep declarative setting callbacks synchronous while saving changes in the background, matching Obsidian's callback contract.
+
 ## 0.1.2
 
 - Make the Jira email optional: configured email uses Basic authentication, while a blank email sends the token as a Bearer credential.
