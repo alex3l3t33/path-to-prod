@@ -140,7 +140,7 @@ export default class PathToProdPlugin extends Plugin {
     const leaf = existing ?? this.app.workspace.getRightLeaf(false);
     if (!leaf) return;
     await leaf.setViewState({ type: FORECAST_VIEW_TYPE, active: true });
-    await this.app.workspace.revealLeaf(leaf);
+    this.app.workspace.setActiveLeaf(leaf, { focus: true });
   }
 }
 

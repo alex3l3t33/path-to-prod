@@ -2,7 +2,7 @@
 
 Path to Prod is an Obsidian plugin that forecasts when a Jira goal will finish development, staging, and production. It does not require story points. Instead, it learns stage durations from completed Jira issues, finds comparable tickets, and runs a capacity-aware Monte Carlo simulation.
 
-## Current MVP
+## Features
 
 - Reads goal and historical tickets with configurable JQL.
 - Reconstructs stage durations from Jira status changelogs.
@@ -13,7 +13,7 @@ Path to Prod is an Obsidian plugin that forecasts when a Jira goal will finish d
 - Accounts for weekdays, manual or ICS-synchronized holidays, crew leave, focus factor, parallel capacity, and production release days.
 - Keeps derived history and credentials in the local Obsidian plugin data file.
 
-This is an early forecasting prototype. Its dates are probabilistic planning aids, not commitments. Sparse history, workflow changes, unrecorded dependencies, and inaccurate calendar data can materially affect results.
+Forecast dates are probabilistic planning aids, not commitments. Sparse history, workflow changes, unrecorded dependencies, and inaccurate calendar data can materially affect results.
 
 ## Development
 
@@ -34,7 +34,7 @@ To test in Obsidian, copy or symlink this directory into a development vault at 
 6. Add holidays, leave, capacity, focus factor, and release weekdays. Optionally add HTTPS ICS holiday feeds and one all-day leave feed per crew member.
 7. Open **Path to Prod**, sync history, and run the forecast.
 
-The personal MVP uses Jira basic authentication with an email and API token. A public multi-user release should replace this with OAuth 2.0 and clearly disclose network access and credential storage.
+Path to Prod uses Jira basic authentication with an email and a dedicated API token. Credentials stay in the vault's local plugin data; use a revocable token and protect access to the vault.
 
 ## Privacy and network access
 
