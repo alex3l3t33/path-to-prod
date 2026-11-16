@@ -158,7 +158,7 @@ export class PathToProdSettingTab extends PluginSettingTab {
     const title = (value: string) => `${value[0]?.toUpperCase()}${value.slice(1)}`;
 
     const jiraItems: SettingDefinition[] = [
-      item("Jira site URL", "For example, https://company.atlassian.net", (setting) =>
+      item("Jira site URL", "Use the Jira root URL, for example https://company.atlassian.net, not a project or board URL.", (setting) =>
         setting.addText((text) =>
           text.setPlaceholder("https://company.atlassian.net").setValue(this.plugin.settings.jiraBaseUrl).onChange(async (value) => {
             this.plugin.settings.jiraBaseUrl = value.trim();
@@ -174,7 +174,7 @@ export class PathToProdSettingTab extends PluginSettingTab {
           })
         )
       ),
-      item("Atlassian email", "Email belonging to the token holder.", (setting) =>
+      item("Atlassian email (optional)", "Required for an Atlassian Cloud API token. Leave blank to send the token as a Bearer credential.", (setting) =>
         setting.addText((text) =>
           text.setValue(this.plugin.settings.jiraEmail).onChange(async (value) => {
             this.plugin.settings.jiraEmail = value.trim();
@@ -182,7 +182,7 @@ export class PathToProdSettingTab extends PluginSettingTab {
           })
         )
       ),
-      item("API token", "Use a dedicated, revocable token. It is stored in this vault's local plugin data.", (setting) =>
+      item("API or Bearer token", "Use a dedicated, revocable token. It is stored in this vault's local plugin data.", (setting) =>
         setting.addText((text) => {
           text.inputEl.type = "password";
           text.setValue(this.plugin.settings.jiraApiToken).onChange(async (value) => {
@@ -191,7 +191,7 @@ export class PathToProdSettingTab extends PluginSettingTab {
           });
         })
       ),
-      item("Company Jira project", "Project key used to replace {{project}} in JQL, for example ACME.", (setting) =>
+      item("Company Jira project", "Project key or exact project name used to replace {{project}} in JQL, for example ACME.", (setting) =>
         setting.addText((text) =>
           text.setPlaceholder("ACME").setValue(this.plugin.settings.jiraProjectKey).onChange(async (value) => {
             this.plugin.settings.jiraProjectKey = value.trim();

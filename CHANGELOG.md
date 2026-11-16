@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- Make the Jira email optional: configured email uses Basic authentication, while a blank email sends the token as a Bearer credential.
+- Replace raw JSON parsing failures with actionable Jira URL, HTML response, HTTP status, and authentication diagnostics.
+- Accept either a Jira project key or exact project name for the `{{project}}` variable.
+
 ## 0.1.1
 
 - Adopt Obsidian 1.13's searchable declarative settings API.

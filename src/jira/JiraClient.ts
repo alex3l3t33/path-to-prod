@@ -1,6 +1,7 @@
 import { requestUrl } from "obsidian";
 import type { PathToProdSettings } from "../settings";
 import type { StatusChange, TicketFeatures } from "../types";
+import { buildJiraAuthorization } from "./auth";
 
 interface JiraSearchIssue {
   id: string;
@@ -53,6 +54,22 @@ function normalizeBaseUrl(value: string): string {
   return value.trim().replace(/\/+$/, "");
 }
 
+function bodySummary(value: string): string {
+  const plainText = value
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return plainText.slice(0, 240);
+}
+
+function authHelp(email: string): string {
+  return email.trim()
+    ? "The plugin used Basic authentication. Verify the Atlassian email and API token."
+    : "The plugin used Bearer authentication. For an Atlassian Cloud API token, add the Atlassian account email; leave email blank only for a Bearer or personal access token.";
+}
+
 export class JiraClient {
   private sprintFieldId: string | null | undefined;
 
@@ -60,17 +77,19 @@ export class JiraClient {
 
   private get baseUrl(): string {
     const baseUrl = normalizeBaseUrl(this.settings.jiraBaseUrl);
-    if (!baseUrl || !this.settings.jiraEmail || !this.settings.jiraApiToken) {
-      throw new Error("Complete the Jira URL, email, and API token in Path to Prod settings.");
+    if (!baseUrl || !this.settings.jiraApiToken.trim()) {
+      throw new Error("Complete the Jira site URL and API or Bearer token in Path to Prod settings.");
     }
     return baseUrl;
   }
 
   private get headers(): Record<string, string> {
-    const credentials = btoa(`${this.settings.jiraEmail}:${this.settings.jiraApiToken}`);
     return {
       Accept: "application/json",
-      Authorization: `Basic ${credentials}`,
+      Authorization: buildJiraAuthorization(
+        this.settings.jiraEmail,
+        this.settings.jiraApiToken
+      ),
       "Content-Type": "application/json"
     };
   }
@@ -79,21 +98,33 @@ export class JiraClient {
     path: string,
     options: { method?: string; body?: unknown } = {}
   ): Promise<T> {
+    const url = `${this.baseUrl}${path}`;
     const response = await requestUrl({
-      url: `${this.baseUrl}${path}`,
+      url,
       method: options.method ?? "GET",
       headers: this.headers,
       ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
       throw: false
     });
+    const isHtml = /^\s*(?:<!doctype\s+html|<html\b)/i.test(response.text);
     if (response.status < 200 || response.status >= 300) {
-      const message =
-        typeof response.json === "object" && response.json !== null
-          ? JSON.stringify(response.json)
-          : response.text;
-      throw new Error(`Jira returned ${response.status}: ${message.slice(0, 240)}`);
+      const summary = bodySummary(response.text);
+      throw new Error(
+        `Jira returned HTTP ${response.status} for ${url}. ${summary || "No response body."} ${authHelp(this.settings.jiraEmail)}`
+      );
     }
-    return response.json as T;
+    if (isHtml) {
+      throw new Error(
+        `Jira returned an HTML page instead of JSON for ${url}. The Jira site URL may point to a login or proxy page. Use the Jira origin, such as https://company.atlassian.net. ${authHelp(this.settings.jiraEmail)}`
+      );
+    }
+    try {
+      return JSON.parse(response.text) as T;
+    } catch {
+      throw new Error(
+        `Jira returned a non-JSON response for ${url}. Check the Jira site URL and authentication method. ${authHelp(this.settings.jiraEmail)}`
+      );
+    }
   }
 
   async testConnection(): Promise<string> {

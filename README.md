@@ -26,15 +26,15 @@ To test in Obsidian, copy or symlink this directory into a development vault at 
 
 ## Configure
 
-1. Create a dedicated Atlassian API token.
-2. Enter the Jira site URL, token holder, Atlassian email, API token, and company Jira project key in plugin settings.
+1. Create a dedicated Jira credential: an Atlassian Cloud API token, OAuth/Bearer token, or Jira personal access token.
+2. Enter the Jira root URL (not a project or board URL), token holder, token, and company Jira project key or exact name. Leave email blank for Bearer authentication; Atlassian Cloud API tokens require the Atlassian account email and use Basic authentication.
 3. Set a completed-ticket JQL query and a goal JQL query. Use `{{project}}` to reference the configured company project key.
 4. Map the team's Jira statuses to development, staging, and production.
 5. Select Scrum, Kanban, or auto detection. For Scrum, set the sprint length and a known sprint start date.
 6. Add holidays, leave, capacity, focus factor, and release weekdays. Optionally add HTTPS ICS holiday feeds and one all-day leave feed per crew member.
 7. Open **Path to Prod**, sync history, and run the forecast.
 
-Path to Prod uses Jira basic authentication with an email and a dedicated API token. Credentials stay in the vault's local plugin data; use a revocable token and protect access to the vault.
+Path to Prod supports Basic authentication for Atlassian Cloud API tokens and Bearer authentication when the email field is blank. Credentials stay in the vault's local plugin data; use a revocable token and protect access to the vault.
 
 ## Privacy and network access
 
