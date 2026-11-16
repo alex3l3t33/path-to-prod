@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Ensure declarative setting renderers return `void` even with Obsidian's chainable component types, eliminating false Promise callback warnings in the community review.
+
 ## 0.1.3
 
 - Keep declarative setting callbacks synchronous while saving changes in the background, matching Obsidian's callback contract.

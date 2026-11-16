@@ -151,8 +151,14 @@ export class PathToProdSettingTab extends PluginSettingTab {
     const item = (
       name: string,
       desc: string | undefined,
-      render: (setting: Setting) => void
-    ): SettingDefinition => ({ name, ...(desc ? { desc } : {}), render });
+      renderSetting: (setting: Setting) => unknown
+    ): SettingDefinition => ({
+      name,
+      ...(desc ? { desc } : {}),
+      render: (setting) => {
+        renderSetting(setting);
+      }
+    });
     const save = () => this.plugin.savePluginData();
     const stages = ["development", "staging", "production"] as const;
     const title = (value: string) => `${value[0]?.toUpperCase()}${value.slice(1)}`;
