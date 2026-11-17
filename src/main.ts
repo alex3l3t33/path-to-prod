@@ -1,6 +1,7 @@
 import { Notice, Plugin } from "obsidian";
 import { CalendarClient } from "./calendar/CalendarClient";
 import { forecastGoal } from "./forecast/engine";
+import { forecastEpics } from "./forecast/epics";
 import { buildHistoricalIssues } from "./forecast/history";
 import { JiraClient } from "./jira/JiraClient";
 import {
@@ -9,7 +10,7 @@ import {
   PathToProdSettingTab,
   type PathToProdSettings
 } from "./settings";
-import type { ForecastResult, HistoricalIssue, LeavePeriod } from "./types";
+import type { EpicForecast, EpicGroup, ForecastResult, HistoricalIssue, LeavePeriod } from "./types";
 import { FORECAST_VIEW_TYPE, ForecastView } from "./view/ForecastView";
 
 interface PluginCache {
@@ -118,6 +119,12 @@ export default class PathToProdPlugin extends Plugin {
   }
 
   async runForecast(): Promise<ForecastResult> {
+    await this.ensureForecastData();
+    const goalIssues = await this.jiraClient().searchIssues(this.settings.goalJql, 500);
+    return forecastGoal(goalIssues, this.cache.history, this.forecastSettings());
+  }
+
+  private async ensureForecastData(): Promise<void> {
     if (this.cache.history.length === 0) await this.syncHistory();
     if (
       !this.cache.calendar.lastSync &&
@@ -126,13 +133,24 @@ export default class PathToProdPlugin extends Plugin {
     ) {
       await this.syncCalendars();
     }
-    const goalIssues = await this.jiraClient().searchIssues(this.settings.goalJql, 500);
-    const settings = {
+  }
+
+  private forecastSettings(): PathToProdSettings {
+    return {
       ...this.settings,
       holidays: [...new Set([...this.settings.holidays, ...this.cache.calendar.holidays])],
       leave: [...this.settings.leave, ...this.cache.calendar.leave]
     };
-    return forecastGoal(goalIssues, this.cache.history, settings);
+  }
+
+  async runEpicForecast(): Promise<{ groups: EpicGroup[]; forecasts: EpicForecast[] }> {
+    await this.ensureForecastData();
+    const groups = await this.jiraClient().searchEpicGroups();
+    return { groups, forecasts: this.reforecastEpics(groups) };
+  }
+
+  reforecastEpics(groups: EpicGroup[]): EpicForecast[] {
+    return forecastEpics(groups, this.cache.history, this.forecastSettings());
   }
 
   async activateView(): Promise<void> {

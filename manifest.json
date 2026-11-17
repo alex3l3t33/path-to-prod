@@ -1,9 +1,9 @@
 {
   "id": "path-to-prod",
   "name": "Path to Prod",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "minAppVersion": "1.13.0",
-  "description": "Forecast development, staging, and production delivery dates from Jira history and team availability.",
+  "description": "Forecast Jira goals and epics with calendars, sprint alerts, and shareable delivery timelines.",
   "author": "Alexandre",
   "isDesktopOnly": false
 }

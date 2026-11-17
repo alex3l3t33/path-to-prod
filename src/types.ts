@@ -16,13 +16,41 @@ export interface TicketFeatures {
   summary: string;
   issueType: string;
   priority?: string;
+  dueDate?: string;
   labels: string[];
   components: string[];
   status: string;
+  statusCategory?: string;
+  parentKey?: string;
   createdAt: string;
   resolvedAt?: string;
   sprintNames: string[];
   assignee?: TicketAssignee;
+}
+
+export interface EpicGroup {
+  epic: TicketFeatures;
+  children: TicketFeatures[];
+}
+
+export interface EpicForecast {
+  epic: TicketFeatures;
+  totalChildren: number;
+  completedChildren: number;
+  remainingChildren: number;
+  reserveTickets: number;
+  forecast?: ForecastResult;
+}
+
+export interface ImportantWorkAlert {
+  epicKey: string;
+  epicSummary: string;
+  importantTicketKeys: string[];
+  epicMarkedImportant: boolean;
+  forecastDate?: string;
+  targetDate?: string;
+  targetSource: "due-date" | "sprint" | "missing-target";
+  state: "risk" | "needs-estimate" | "needs-target";
 }
 
 export interface StatusChange {

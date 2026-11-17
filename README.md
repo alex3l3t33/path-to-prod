@@ -8,6 +8,11 @@ Path to Prod is an Obsidian plugin that forecasts when a Jira goal will finish d
 - Reconstructs stage durations from Jira status changelogs.
 - Matches unpointed tickets using issue type, component, labels, priority, and summary words.
 - Produces P50, P80, and P95 milestone dates.
+- Forecasts Jira epics from their child tickets, with an editable reserve for unrefined work, and shows development, staging, and production on a Gantt timeline.
+- Shows each environment's P80 date beneath its colored bar and a dashed range from production P80 to P95.
+- Labels the epic timeline by ISO week number and Monday start date, including the correct ISO week year around New Year.
+- Copies the current dashboard as an email-ready report, with colored stage cells where rich paste is supported and a complete plain-text fallback.
+- Watches important epics and tickets selected in the dashboard or identified by configurable Jira priorities and labels. Jira due dates take precedence; Scrum work without due dates is compared with a configurable sprint target.
 - Auto-detects Scrum versus Kanban from Jira sprint metadata, with a manual override.
 - Aligns Scrum development to configurable 1–6 week sprint boundaries; Kanban stays continuous-flow and WIP-capacity based.
 - Accounts for weekdays, manual or ICS-synchronized holidays, crew leave, focus factor, parallel capacity, and production release days.
@@ -33,6 +38,10 @@ To test in Obsidian, copy or symlink this directory into a development vault at 
 5. Select Scrum, Kanban, or auto detection. For Scrum, set the sprint length and a known sprint start date.
 6. Add holidays, leave, capacity, focus factor, and release weekdays. Optionally add HTTPS ICS holiday feeds and one all-day leave feed per crew member.
 7. Open **Path to Prod**, sync history, and run the forecast.
+
+To forecast epics, set **Epic JQL** and open **Epic timeline**. Adjust the unrefined reserve for each epic as its scope becomes clearer. Set sprint length and the important-work target in the dashboard. Jira priorities and labels can mark work as important automatically, and each epic or child ticket can also be marked manually. The watch compares the *epic's* P80 production date with the target for its important scope; it is a signal to review the plan, not an individual ticket completion forecast. Kanban work without a Jira due date is shown as needing a target rather than given a sprint alert. Each epic uses the full configured team capacity independently, so simultaneous epic dates are not a combined portfolio commitment.
+
+Use **Email draft** on the goal or epic dashboard to open the default email client with a suggested subject and copy the current forecast for pasting into the draft. **Copy for email** only copies the report. Rich paste retains the colored environment cells; clients that only support plain text receive the same dates, ISO week numbers, and important-work alerts as text. The plugin does not send email or choose recipients.
 
 Path to Prod supports Basic authentication for Atlassian Cloud API tokens and Bearer authentication when the email field is blank. Credentials stay in the vault's local plugin data; use a revocable token and protect access to the vault.
 

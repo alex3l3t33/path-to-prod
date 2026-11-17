@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0
+
+- Forecast Jira epics from their child tickets and an adjustable reserve for unrefined work.
+- Show each epic in a color-coded development, staging, and production Gantt timeline with P50, P80, and P95 dates.
+- Label the timeline with ISO week numbers and clear P80 dates for every environment.
+- Flag important epics and tickets manually or through configurable Jira priorities and labels, then watch their epic forecast against Jira due dates or Scrum sprint targets.
+- Adjust sprint length and important-work targets from the dashboard.
+- Copy an email-ready forecast with colored stage cells and a plain-text fallback, or open an email draft with a suggested subject.
+- Document that each epic assumes full team capacity independently and ticket alerts use their parent epic forecast as a scope-level signal.
+
 ## 0.1.4
 
 - Ensure declarative setting renderers return `void` even with Obsidian's chainable component types, eliminating false Promise callback warnings in the community review.

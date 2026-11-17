@@ -16,6 +16,14 @@ export interface PathToProdSettings {
   jiraProjectKey: string;
   historyJql: string;
   goalJql: string;
+  epicJql: string;
+  unrefinedTicketsPerEpic: number;
+  epicReserveOverrides: Record<string, number>;
+  importantEpicKeys: string[];
+  importantTicketKeys: string[];
+  importantPriorities: string[];
+  importantLabels: string[];
+  importantTargetSprints: number;
   historyLimit: number;
   simulations: number;
   agilityMethod: AgilityMethodSetting;
@@ -46,6 +54,15 @@ export const DEFAULT_SETTINGS: PathToProdSettings = {
     'project = "{{project}}" AND statusCategory = Done ORDER BY resolved DESC',
   goalJql:
     'project = "{{project}}" AND statusCategory != Done ORDER BY priority DESC',
+  epicJql:
+    'project = "{{project}}" AND issuetype = Epic AND statusCategory != Done ORDER BY updated DESC',
+  unrefinedTicketsPerEpic: 1,
+  epicReserveOverrides: {},
+  importantEpicKeys: [],
+  importantTicketKeys: [],
+  importantPriorities: ["Highest", "High", "Critical", "Blocker"],
+  importantLabels: ["important"],
+  importantTargetSprints: 2,
   historyLimit: 200,
   simulations: 2000,
   agilityMethod: "auto",
@@ -95,7 +112,12 @@ export function mergeSettings(
     stageStatuses: {
       ...DEFAULT_SETTINGS.stageStatuses,
       ...stored?.stageStatuses
-    }
+    },
+    epicReserveOverrides: { ...stored?.epicReserveOverrides },
+    importantEpicKeys: stored?.importantEpicKeys ?? [],
+    importantTicketKeys: stored?.importantTicketKeys ?? [],
+    importantPriorities: stored?.importantPriorities ?? DEFAULT_SETTINGS.importantPriorities,
+    importantLabels: stored?.importantLabels ?? DEFAULT_SETTINGS.importantLabels
   };
 }
 
@@ -237,6 +259,48 @@ export class PathToProdSettingTab extends PluginSettingTab {
           text.inputEl.rows = 3;
           text.setValue(this.plugin.settings.goalJql).onChange((value) => {
             this.plugin.settings.goalJql = value.trim();
+            void save();
+          });
+        })
+      ),
+      item("Epic JQL", "Open epics to include in the Gantt view. Use {{project}} for the configured Jira project.", (setting) =>
+        setting.addTextArea((text) => {
+          text.inputEl.rows = 3;
+          text.setValue(this.plugin.settings.epicJql).onChange((value) => {
+            this.plugin.settings.epicJql = value.trim();
+            void save();
+          });
+        })
+      ),
+      item("Unrefined tickets per epic", "Planning reserve for work not yet represented by Jira child tickets. Adjust each epic in the Gantt view.", (setting) =>
+        setting.addText((text) =>
+          text.setValue(String(this.plugin.settings.unrefinedTicketsPerEpic)).onChange((value) => {
+            this.plugin.settings.unrefinedTicketsPerEpic = Math.min(50, Math.max(0, Math.round(numberOr(value, 1))));
+            void save();
+          })
+        )
+      ),
+      item("Important priorities", "Jira priorities that mark an epic or ticket as important. Comma-separated, case-insensitive.", (setting) =>
+        setting.addText((text) =>
+          text.setValue(this.plugin.settings.importantPriorities.join(", ")).onChange((value) => {
+            this.plugin.settings.importantPriorities = parseCsv(value);
+            void save();
+          })
+        )
+      ),
+      item("Important labels", "Jira labels that mark an epic or ticket as important. Comma-separated, case-insensitive.", (setting) =>
+        setting.addText((text) =>
+          text.setValue(this.plugin.settings.importantLabels.join(", ")).onChange((value) => {
+            this.plugin.settings.importantLabels = parseCsv(value);
+            void save();
+          })
+        )
+      ),
+      item("Important work target", "When no Jira due date exists, watch whether P80 production for a marked epic extends beyond this many sprints. Applies in Scrum mode.", (setting) =>
+        setting.addDropdown((dropdown) => {
+          for (let count = 1; count <= 6; count += 1) dropdown.addOption(String(count), `${count} sprint${count === 1 ? "" : "s"}`);
+          dropdown.setValue(String(this.plugin.settings.importantTargetSprints)).onChange((value) => {
+            this.plugin.settings.importantTargetSprints = Number(value);
             void save();
           });
         })

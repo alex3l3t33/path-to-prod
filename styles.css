@@ -760,6 +760,564 @@
   white-space: nowrap;
 }
 
+.path-to-prod-view-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 20px;
+}
+
+.path-to-prod-view-tabs button {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--font-ui-small);
+  padding: 8px 13px;
+}
+
+.path-to-prod-view-tabs button:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.path-to-prod-view-tabs button.is-active {
+  background: var(--background-secondary);
+  border-color: var(--background-modifier-border);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--background-primary) 65%, transparent);
+  color: var(--text-normal);
+  font-weight: var(--font-semibold);
+}
+
+.path-to-prod-epic-empty button {
+  margin-top: 10px;
+}
+
+.path-to-prod-epic-heading {
+  align-items: flex-end;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  margin: 8px 0 18px;
+}
+
+.path-to-prod-epic-heading h2 {
+  font-size: clamp(1.7rem, 3vw, 2.3rem);
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+  margin: 7px 0;
+}
+
+.path-to-prod-epic-heading p {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  margin: 0;
+  max-width: 690px;
+}
+
+.path-to-prod-epic-horizon {
+  background: linear-gradient(140deg, var(--p2p-accent-soft), transparent), var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 13px;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+}
+
+.path-to-prod-epic-horizon span {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.path-to-prod-epic-horizon strong {
+  font-size: var(--font-ui-medium);
+}
+
+.path-to-prod-epic-stats {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 13px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.path-to-prod-epic-stats > div {
+  border-right: 1px solid var(--background-modifier-border);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 18px;
+}
+
+.path-to-prod-epic-stats > div:last-child {
+  border-right: 0;
+}
+
+.path-to-prod-epic-stats strong {
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.path-to-prod-epic-stats span {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.path-to-prod-epic-planning,
+.path-to-prod-epic-watch {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 12px;
+  margin-bottom: 14px;
+  padding: 15px 18px;
+}
+
+.path-to-prod-epic-planning,
+.path-to-prod-epic-planning-controls,
+.path-to-prod-epic-watch-heading,
+.path-to-prod-epic-alert {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.path-to-prod-epic-planning > div:first-child,
+.path-to-prod-epic-alert > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.path-to-prod-epic-planning > div:first-child > span,
+.path-to-prod-epic-alert > div > span,
+.path-to-prod-epic-watch > p {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.path-to-prod-epic-planning-controls {
+  flex: 0 0 auto;
+}
+
+.path-to-prod-epic-planning-controls label {
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  font-size: var(--font-ui-smaller);
+  gap: 4px;
+}
+
+.path-to-prod-epic-planning-controls select {
+  min-width: 116px;
+}
+
+.path-to-prod-epic-watch-heading h3 {
+  font-size: var(--font-ui-medium);
+  margin: 0;
+}
+
+.path-to-prod-epic-watch-heading > span {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.path-to-prod-epic-watch > p {
+  margin: 10px 0 0;
+}
+
+.path-to-prod-epic-watch ul {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.path-to-prod-epic-alert {
+  border-top: 1px solid var(--background-modifier-border);
+  flex-wrap: wrap;
+  padding: 10px 0;
+}
+
+.path-to-prod-epic-alert:first-child {
+  border-top: 0;
+}
+
+.path-to-prod-epic-alert > span {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  font-variant-numeric: tabular-nums;
+}
+
+.path-to-prod-epic-alert.is-risk > span {
+  color: var(--text-warning);
+  font-weight: var(--font-semibold);
+}
+
+.path-to-prod-epic-panel {
+  --p2p-dev: var(--color-blue);
+  --p2p-stage: var(--color-orange);
+  --p2p-prod: var(--color-green);
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.path-to-prod-epic-panel-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 18px 20px 12px;
+}
+
+.path-to-prod-epic-panel-header h3 {
+  font-size: var(--font-ui-medium);
+  margin: 0;
+}
+
+.path-to-prod-epic-legend,
+.path-to-prod-epic-legend > span {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+}
+
+.path-to-prod-epic-legend {
+  color: var(--text-muted);
+  flex-wrap: wrap;
+  font-size: var(--font-ui-smaller);
+  gap: 14px;
+}
+
+.path-to-prod-legend-dot {
+  border-radius: 50%;
+  display: inline-block;
+  flex: 0 0 auto;
+  height: 9px;
+  width: 9px;
+}
+
+.path-to-prod-stage-development {
+  background: var(--p2p-dev, var(--color-blue));
+}
+
+.path-to-prod-stage-staging {
+  background: var(--p2p-stage, var(--color-orange));
+}
+
+.path-to-prod-stage-production {
+  background: var(--p2p-prod, var(--color-green));
+}
+
+.path-to-prod-legend-tail {
+  border-bottom: 2px dashed var(--text-muted);
+  display: inline-block;
+  width: 18px;
+}
+
+.path-to-prod-epic-scroll {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.path-to-prod-epic-chart {
+  min-width: calc(270px + var(--p2p-chart-width));
+}
+
+.path-to-prod-epic-axis,
+.path-to-prod-epic-row {
+  display: grid;
+  grid-template-columns: 270px var(--p2p-chart-width);
+}
+
+.path-to-prod-epic-axis {
+  background: var(--background-primary-alt);
+  border-block: 1px solid var(--background-modifier-border);
+  min-height: 56px;
+}
+
+.path-to-prod-epic-axis-title {
+  align-items: center;
+  background: var(--background-primary-alt);
+  color: var(--text-faint);
+  display: flex;
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.08em;
+  padding-left: 20px;
+  position: sticky;
+  left: 0;
+  z-index: 3;
+}
+
+.path-to-prod-epic-axis-track,
+.path-to-prod-epic-lane {
+  position: relative;
+}
+
+.path-to-prod-epic-axis-track > span {
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  font-size: var(--font-ui-smaller);
+  gap: 1px;
+  overflow: hidden;
+  padding-left: 8px;
+  position: absolute;
+  top: 8px;
+  white-space: nowrap;
+}
+
+.path-to-prod-epic-axis-track strong {
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+}
+
+.path-to-prod-epic-axis-track small {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.path-to-prod-epic-row {
+  border-bottom: 1px solid var(--background-modifier-border);
+  min-height: 142px;
+}
+
+.path-to-prod-epic-row:last-child {
+  border-bottom: 0;
+}
+
+.path-to-prod-epic-info {
+  background: var(--background-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  justify-content: center;
+  min-width: 0;
+  padding: 13px 18px 13px 20px;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
+.path-to-prod-epic-key {
+  color: var(--p2p-accent);
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-semibold);
+}
+
+.path-to-prod-epic-info > strong {
+  font-size: var(--font-ui-small);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.path-to-prod-epic-scope {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.path-to-prod-epic-reserve {
+  align-items: center;
+  color: var(--text-muted);
+  display: flex;
+  font-size: var(--font-ui-smaller);
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.path-to-prod-epic-reserve input {
+  background: var(--background-primary-alt);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  color: var(--text-normal);
+  font: inherit;
+  padding: 3px 5px;
+  width: 52px;
+}
+
+.path-to-prod-epic-important,
+.path-to-prod-epic-ticket-mark {
+  align-items: center;
+  color: var(--text-muted);
+  display: inline-flex;
+  font-size: var(--font-ui-smaller);
+  gap: 5px;
+}
+
+.path-to-prod-epic-important input,
+.path-to-prod-epic-ticket-mark input {
+  margin: 0;
+}
+
+.path-to-prod-epic-auto-mark {
+  color: var(--text-accent);
+  font-size: var(--font-ui-smaller);
+}
+
+.path-to-prod-epic-lane {
+  align-self: stretch;
+  background: var(--background-secondary);
+}
+
+.path-to-prod-epic-gridline {
+  background: var(--background-modifier-border);
+  height: 100%;
+  opacity: 0.55;
+  position: absolute;
+  top: 0;
+  width: 1px;
+}
+
+.path-to-prod-epic-bar,
+.path-to-prod-epic-tail {
+  height: 24px;
+  position: absolute;
+  top: 35px;
+}
+
+.path-to-prod-epic-bar {
+  align-items: center;
+  border-radius: 5px;
+  color: var(--background-primary);
+  display: flex;
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-semibold);
+  justify-content: center;
+  min-width: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.path-to-prod-epic-tail {
+  border: 2px dashed var(--text-muted);
+  border-left: 0;
+  border-radius: 0 5px 5px 0;
+  opacity: 0.75;
+}
+
+.path-to-prod-epic-milestones {
+  bottom: 14px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  left: 18px;
+  position: absolute;
+  right: 18px;
+}
+
+.path-to-prod-epic-milestones > span {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--font-ui-smaller);
+  gap: 5px;
+  min-width: 0;
+}
+
+.path-to-prod-epic-milestones strong {
+  color: var(--text-normal);
+  flex-basis: 100%;
+  font-size: var(--font-ui-small);
+  font-variant-numeric: tabular-nums;
+  padding-left: 14px;
+  white-space: nowrap;
+}
+
+.path-to-prod-epic-no-scope {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  left: 22px;
+  position: absolute;
+  top: 44px;
+}
+
+.path-to-prod-epic-foot {
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--font-ui-smaller);
+  gap: 8px 22px;
+  padding: 13px 20px 18px;
+}
+
+.path-to-prod-epic-details {
+  margin-top: 14px;
+}
+
+.path-to-prod-epic-details details {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 11px;
+  margin-bottom: 8px;
+  padding: 12px 16px;
+}
+
+.path-to-prod-epic-details summary {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.path-to-prod-epic-details summary strong {
+  font-size: var(--font-ui-small);
+}
+
+.path-to-prod-epic-details summary span,
+.path-to-prod-epic-details p,
+.path-to-prod-epic-details li {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.path-to-prod-epic-details ul {
+  margin-bottom: 0;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.path-to-prod-epic-details li {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.path-to-prod-epic-date-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.path-to-prod-epic-date-grid > div {
+  align-items: center;
+  background: var(--background-primary-alt);
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--font-ui-smaller);
+  gap: 5px;
+  padding: 9px;
+}
+
+.path-to-prod-epic-date-grid > div > span:last-child {
+  color: var(--text-muted);
+  flex-basis: 100%;
+}
+
 @media (max-width: 780px) {
   .path-to-prod-view {
     padding: 18px;
@@ -767,6 +1325,28 @@
 
   .path-to-prod-header {
     flex-direction: column;
+  }
+
+  .path-to-prod-epic-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .path-to-prod-epic-planning {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .path-to-prod-epic-planning-controls {
+    justify-content: flex-start;
+  }
+
+  .path-to-prod-epic-horizon {
+    flex: auto;
+  }
+
+  .path-to-prod-epic-date-grid {
+    grid-template-columns: 1fr;
   }
 
   .path-to-prod-grid {

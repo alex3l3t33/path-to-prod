@@ -338,21 +338,22 @@ export function forecastGoal(
       stageForStatus(issue.status, settings.stageStatuses)
     ])
   );
+  const stageScopes = Object.fromEntries(
+    STAGES.map((stage) => [
+      stage,
+      goalIssues
+        .filter((issue) => stageIndex(statusStages.get(issue.key)) <= STAGES.indexOf(stage))
+        .map((issue) => ({
+          issue,
+          pool: durationPool(issue, history, stage, settings.useAssigneeHistory)
+        }))
+    ])
+  ) as Record<Stage, Array<{ issue: TicketFeatures; pool: Array<{ duration: number; weight: number }> }>>;
 
   for (let simulation = 0; simulation < simulations; simulation += 1) {
     let cursor = new Date(start);
     for (const stage of STAGES) {
-      const currentStageIndex = STAGES.indexOf(stage);
-      const stageIssues = goalIssues.filter(
-        (issue) => stageIndex(statusStages.get(issue.key)) <= currentStageIndex
-      );
-      const effort = stageIssues.reduce((sum, issue) => {
-        const pool = durationPool(
-          issue,
-          history,
-          stage,
-          settings.useAssigneeHistory
-        );
+      const effort = stageScopes[stage].reduce((sum, { pool }) => {
         return sum + weightedSample(pool, settings.fallbackDays[stage], random);
       }, 0);
 

@@ -31,7 +31,7 @@ export default defineConfig([
             "Path to Prod",
             "Scrum"
           ],
-          acronyms: ["API", "HTTP", "HTTPS", "ICS", "JQL", "URL"]
+          acronyms: ["API", "HTTP", "HTTPS", "ICS", "JQL", "URL", "P80", "P95"]
         }
       ]
     }

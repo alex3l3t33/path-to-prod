@@ -1,6 +1,6 @@
 import { requestUrl } from "obsidian";
 import type { PathToProdSettings } from "../settings";
-import type { StatusChange, TicketFeatures } from "../types";
+import type { EpicGroup, StatusChange, TicketFeatures } from "../types";
 import { buildJiraAuthorization } from "./auth";
 
 interface JiraSearchIssue {
@@ -13,10 +13,12 @@ interface JiraSearchIssue {
     priority?: { name?: string };
     labels?: string[];
     components?: Array<{ name?: string }>;
-    status?: { name?: string };
+    status?: { name?: string; statusCategory?: { key?: string } };
+    parent?: { key?: string };
     assignee?: { accountId?: string; displayName?: string } | null;
     created?: string;
     resolutiondate?: string | null;
+    duedate?: string | null;
   };
 }
 
@@ -202,9 +204,11 @@ export class JiraClient {
             "labels",
             "components",
             "status",
+            "parent",
             "assignee",
             "created",
             "resolutiondate",
+            "duedate",
             ...(sprintFieldId ? [sprintFieldId] : [])
           ],
           ...(nextPageToken ? { nextPageToken } : {})
@@ -225,6 +229,12 @@ export class JiraClient {
             .map((component) => component.name)
             .filter((name): name is string => Boolean(name)),
           status: issue.fields.status?.name ?? "Unknown",
+          ...(issue.fields.status?.statusCategory?.key
+            ? { statusCategory: issue.fields.status.statusCategory.key }
+            : {}),
+          ...(issue.fields.parent?.key
+            ? { parentKey: issue.fields.parent.key }
+            : {}),
           createdAt: issue.fields.created ?? new Date().toISOString(),
           sprintNames: sprintFieldId
             ? this.sprintNames(issue.fields[sprintFieldId])
@@ -241,6 +251,9 @@ export class JiraClient {
             : {}),
           ...(issue.fields.resolutiondate
             ? { resolvedAt: issue.fields.resolutiondate }
+            : {}),
+          ...(issue.fields.duedate
+            ? { dueDate: issue.fields.duedate }
             : {})
         });
         if (result.length >= limit) break;
@@ -251,6 +264,31 @@ export class JiraClient {
     } while (result.length < limit);
 
     return result;
+  }
+
+  async searchEpicGroups(): Promise<EpicGroup[]> {
+    const epics = await this.searchIssues(this.settings.epicJql, 31);
+    if (epics.length > 30) {
+      throw new Error("The epic query returned more than 30 epics. Narrow Epic JQL to keep the timeline readable.");
+    }
+    const groups = new Map<string, EpicGroup>();
+    for (const epic of epics) groups.set(epic.key, { epic, children: [] });
+    for (let offset = 0; offset < epics.length; offset += 20) {
+      const keys = epics.slice(offset, offset + 20).map((epic) => epic.key);
+      const jql = `parent in (${keys.map((key) => `"${key.replace(/"/g, '\\"')}"`).join(", ")}) ORDER BY created ASC`;
+      const children = await this.searchIssues(jql, 1001);
+      if (children.length > 1000) {
+        throw new Error("More than 1,000 children matched one epic batch. Narrow Epic JQL so no work is omitted.");
+      }
+      for (const child of children) {
+        const group = child.parentKey ? groups.get(child.parentKey) : undefined;
+        if (!group) {
+          throw new Error(`Jira did not return the epic parent for ${child.key}. Check access to the parent field.`);
+        }
+        group.children.push(child);
+      }
+    }
+    return [...groups.values()];
   }
 
   async getIssueStatusChanges(issueKey: string): Promise<StatusChange[]> {
