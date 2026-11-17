@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- Add an optional Ko-fi support link to the Obsidian plugin listing and GitHub repository.
+
 ## 0.2.0
 
 - Forecast Jira epics from their child tickets and an adjustable reserve for unrefined work.

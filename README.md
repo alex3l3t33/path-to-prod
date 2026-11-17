@@ -45,6 +45,10 @@ Use **Email draft** on the goal or epic dashboard to open the default email clie
 
 Path to Prod supports Basic authentication for Atlassian Cloud API tokens and Bearer authentication when the email field is blank. Credentials stay in the vault's local plugin data; use a revocable token and protect access to the vault.
 
+## Support
+
+Path to Prod is free. If you would like to support ongoing development, you can do so optionally on [Ko-fi](https://ko-fi.com/alexandre42682). Donations do not unlock features or change forecast behavior.
+
 ## Privacy and network access
 
 Path to Prod makes network requests only to the configured Jira site and optional HTTPS ICS calendar feeds. Jira credentials, the token-holder variable, project key, and private calendar URLs are stored in the vault's local plugin data file. The plugin has no telemetry, analytics, advertising, or developer-operated server. Protect the vault and use dedicated, revocable credentials.
