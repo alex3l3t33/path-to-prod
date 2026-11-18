@@ -1021,6 +1021,14 @@
   width: 18px;
 }
 
+.path-to-prod-legend-milestone {
+  background: var(--text-normal);
+  border-radius: 50%;
+  display: inline-block;
+  height: 8px;
+  width: 8px;
+}
+
 .path-to-prod-epic-scroll {
   overflow-x: auto;
   overscroll-behavior-inline: contain;
@@ -1086,7 +1094,7 @@
 
 .path-to-prod-epic-row {
   border-bottom: 1px solid var(--background-modifier-border);
-  min-height: 142px;
+  min-height: 150px;
 }
 
 .path-to-prod-epic-row:last-child {
@@ -1192,10 +1200,49 @@
   font-size: var(--font-ui-smaller);
   font-weight: var(--font-semibold);
   justify-content: center;
-  min-width: 4px;
   overflow: hidden;
   white-space: nowrap;
   z-index: 1;
+}
+
+.path-to-prod-epic-today {
+  border-left: 1px dashed var(--text-muted);
+  height: 100%;
+  opacity: 0.8;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  z-index: 1;
+}
+
+.path-to-prod-epic-milestone-marker {
+  --p2p-marker: var(--p2p-dev);
+  border-left: 2px solid var(--p2p-marker);
+  height: 34px;
+  pointer-events: none;
+  position: absolute;
+  top: 30px;
+  z-index: 2;
+}
+
+.path-to-prod-epic-milestone-marker::after {
+  background: var(--p2p-marker);
+  border: 2px solid var(--background-secondary);
+  border-radius: 50%;
+  bottom: -5px;
+  content: "";
+  height: 8px;
+  left: -6px;
+  position: absolute;
+  width: 8px;
+}
+
+.path-to-prod-epic-milestone-marker.is-staging {
+  --p2p-marker: var(--p2p-stage);
+}
+
+.path-to-prod-epic-milestone-marker.is-production {
+  --p2p-marker: var(--p2p-prod);
 }
 
 .path-to-prod-epic-tail {
@@ -1217,11 +1264,14 @@
 
 .path-to-prod-epic-milestones > span {
   align-items: center;
+  background: var(--background-primary-alt);
+  border-radius: 7px;
   display: flex;
   flex-wrap: wrap;
   font-size: var(--font-ui-smaller);
   gap: 5px;
   min-width: 0;
+  padding: 6px 8px;
 }
 
 .path-to-prod-epic-milestones strong {

@@ -3,7 +3,8 @@ import { CalendarClient } from "./calendar/CalendarClient";
 import { forecastGoal } from "./forecast/engine";
 import { forecastEpics } from "./forecast/epics";
 import { buildHistoricalIssues } from "./forecast/history";
-import { JiraClient } from "./jira/JiraClient";
+import { JiraClient, type JiraConnectionResult } from "./jira/JiraClient";
+import { migrateLegacyJiraToken, settingsWithoutJiraToken } from "./jira/tokenStorage";
 import {
   DEFAULT_SETTINGS,
   mergeSettings,
@@ -65,17 +66,24 @@ export default class PathToProdPlugin extends Plugin {
       ...(data?.cache?.lastSync ? { lastSync: data.cache.lastSync } : {}),
       calendar: data?.cache?.calendar ?? { holidays: [], leave: [] }
     };
+    if (migrateLegacyJiraToken(this.settings, this.app.secretStorage)) {
+      await this.savePluginData();
+    }
   }
 
   async savePluginData(): Promise<void> {
-    await this.saveData({ settings: this.settings, cache: this.cache } satisfies StoredData);
+    await this.saveData({ settings: settingsWithoutJiraToken(this.settings), cache: this.cache } satisfies StoredData);
   }
 
   private jiraClient(): JiraClient {
-    return new JiraClient(this.settings);
+    const secretId = this.settings.jiraTokenSecretId;
+    return new JiraClient({
+      ...this.settings,
+      jiraApiToken: secretId ? this.app.secretStorage.getSecret(secretId) ?? "" : ""
+    });
   }
 
-  async testJiraConnection(): Promise<string> {
+  async testJiraConnection(): Promise<JiraConnectionResult> {
     return this.jiraClient().testConnection();
   }
 

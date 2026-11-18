@@ -409,6 +409,9 @@ export class ForecastView extends ItemView {
     const tailLegend = legend.createSpan();
     tailLegend.createSpan({ cls: "path-to-prod-legend-tail" });
     tailLegend.createSpan({ text: "P80–P95" });
+    const milestoneLegend = legend.createSpan();
+    milestoneLegend.createSpan({ cls: "path-to-prod-legend-milestone" });
+    milestoneLegend.createSpan({ text: "P80 milestone" });
 
     const today = todayLocalKey();
     const axisStart = mondayOfIsoWeek(today);
@@ -482,6 +485,9 @@ export class ForecastView extends ItemView {
         const line = lane.createSpan({ cls: "path-to-prod-epic-gridline" });
         line.style.left = `${(tick * 7 / daySpan) * 100}%`;
       }
+      const todayLine = lane.createSpan({ cls: "path-to-prod-epic-today" });
+      todayLine.style.left = `${position(today)}%`;
+      todayLine.setAttribute("aria-hidden", "true");
       if (!epic.forecast) {
         lane.createSpan({ cls: "path-to-prod-epic-no-scope", text: "No remaining scope" });
         continue;
@@ -493,11 +499,17 @@ export class ForecastView extends ItemView {
         ["production", position(milestones.staging.p80), position(milestones.production.p80)]
       ];
       for (const [stage, left, right] of bounds) {
-        const bar = lane.createSpan({ cls: `path-to-prod-epic-bar path-to-prod-stage-${stage}` });
-        bar.style.left = `${left}%`;
-        bar.style.width = `${Math.max(0.5, right - left)}%`;
-        bar.setAttribute("title", `${stageLabel(stage)} P80: ${formatDate(milestones[stage].p80)}`);
-        if (right - left >= 11) bar.createSpan({ text: stageLabel(stage) });
+        if (right > left) {
+          const bar = lane.createSpan({ cls: `path-to-prod-epic-bar path-to-prod-stage-${stage}` });
+          bar.style.left = `${left}%`;
+          bar.style.width = `${right - left}%`;
+          bar.setAttribute("title", `${stageLabel(stage)} P80: ${formatDate(milestones[stage].p80)}`);
+          if (right - left >= 11) bar.createSpan({ text: stageLabel(stage) });
+        }
+        const marker = lane.createSpan({ cls: `path-to-prod-epic-milestone-marker is-${stage}` });
+        marker.style.left = `${right}%`;
+        marker.setAttribute("title", `${stageLabel(stage)} P80: ${formatDate(milestones[stage].p80)}`);
+        marker.setAttribute("aria-hidden", "true");
       }
       const tailStart = position(milestones.production.p80);
       const tailEnd = position(milestones.production.p95);

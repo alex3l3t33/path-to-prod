@@ -2,9 +2,11 @@ import type { PathToProdSettings } from "../src/settings";
 
 export const TEST_SETTINGS: PathToProdSettings = {
   jiraBaseUrl: "",
+  jiraDeployment: "cloud",
   jiraTokenHolder: "Test User",
   jiraEmail: "",
   jiraApiToken: "",
+  jiraTokenSecretId: "",
   jiraProjectKey: "DEMO",
   historyJql: "project = DEMO AND statusCategory = Done",
   goalJql: "project = DEMO AND statusCategory != Done",

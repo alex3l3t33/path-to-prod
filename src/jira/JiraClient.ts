@@ -26,18 +26,22 @@ interface SearchResponse {
   issues?: JiraSearchIssue[];
   nextPageToken?: string;
   isLast?: boolean;
+  startAt?: number;
+  total?: number;
+}
+
+interface StatusHistory {
+  created?: string;
+  items?: Array<{
+    field?: string;
+    fieldId?: string;
+    fromString?: string | null;
+    toString?: string | null;
+  }>;
 }
 
 interface ChangelogResponse {
-  values?: Array<{
-    created?: string;
-    items?: Array<{
-      field?: string;
-      fieldId?: string;
-      fromString?: string | null;
-      toString?: string | null;
-    }>;
-  }>;
+  values?: StatusHistory[];
   startAt?: number;
   maxResults?: number;
   total?: number;
@@ -52,18 +56,32 @@ interface JiraFieldSearchResponse {
   }>;
 }
 
-function normalizeBaseUrl(value: string): string {
-  return value.trim().replace(/\/+$/, "");
+interface DataCenterIssueResponse {
+  changelog?: { histories?: StatusHistory[]; total?: number };
 }
 
-function bodySummary(value: string): string {
-  const plainText = value
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return plainText.slice(0, 240);
+export interface JiraConnectionResult {
+  project: string;
+  sampleIssueKey?: string;
+}
+
+function normalizeBaseUrl(value: string): string {
+  const trimmed = value.trim().replace(/\/+$/, "");
+  if (!trimmed) return "";
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    throw new Error("Enter a complete Jira URL, such as https://company.atlassian.net.");
+  }
+  if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.search || parsed.hash) {
+    throw new Error("Use an HTTPS Jira API base URL without credentials, query parameters, or a fragment.");
+  }
+  const path = parsed.pathname.replace(/\/+$/, "");
+  if (/\/(?:browse|projects|plugins\/servlet|jira\/software)(?:\/|$)/i.test(path)) {
+    throw new Error("Use the company-approved Jira API base URL, not a board, issue, or project page.");
+  }
+  return `${parsed.origin}${path === "/" ? "" : path}`;
 }
 
 function authHelp(email: string): string {
@@ -74,13 +92,26 @@ function authHelp(email: string): string {
 
 export class JiraClient {
   private sprintFieldId: string | null | undefined;
+  private epicLinkFieldId: string | null | undefined;
+
+  private get deployment(): "cloud" | "data-center" {
+    if (this.settings.jiraDeployment !== "auto") return this.settings.jiraDeployment;
+    const hostname = new URL(this.baseUrl).hostname;
+    return hostname === "api.atlassian.com" || hostname.endsWith(".atlassian.net")
+      ? "cloud"
+      : "data-center";
+  }
+
+  private get apiRoot(): string {
+    return this.deployment === "cloud" ? "/rest/api/3" : "/rest/api/2";
+  }
 
   constructor(private readonly settings: PathToProdSettings) {}
 
   private get baseUrl(): string {
     const baseUrl = normalizeBaseUrl(this.settings.jiraBaseUrl);
     if (!baseUrl || !this.settings.jiraApiToken.trim()) {
-      throw new Error("Complete the Jira site URL and API or Bearer token in Path to Prod settings.");
+      throw new Error("Complete the Jira site URL and select a Jira token secret in Path to Prod settings.");
     }
     return baseUrl;
   }
@@ -101,55 +132,84 @@ export class JiraClient {
     options: { method?: string; body?: unknown } = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${path}`;
-    const response = await requestUrl({
-      url,
-      method: options.method ?? "GET",
-      headers: this.headers,
-      ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
-      throw: false
-    });
+    let response;
+    try {
+      response = await requestUrl({
+        url,
+        method: options.method ?? "GET",
+        headers: this.headers,
+        ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
+        throw: false
+      });
+    } catch {
+      throw new Error(`Could not reach Jira at ${this.baseUrl}. Check the company proxy, VPN, TLS certificate, and Jira allowlist with your administrator. The plugin does not send credentials through a separate proxy service.`);
+    }
     const isHtml = /^\s*(?:<!doctype\s+html|<html\b)/i.test(response.text);
-    if (response.status < 200 || response.status >= 300) {
-      const summary = bodySummary(response.text);
-      throw new Error(
-        `Jira returned HTTP ${response.status} for ${url}. ${summary || "No response body."} ${authHelp(this.settings.jiraEmail)}`
-      );
+    if (response.status === 407) {
+      throw new Error("The company proxy requires authentication (HTTP 407). Configure proxy access for Obsidian with your administrator; do not enter proxy credentials as the Jira token.");
     }
     if (isHtml) {
+      throw new Error(`Jira returned an HTML page instead of JSON (HTTP ${response.status}). A corporate proxy, SSO gateway, or login page may be intercepting the request. Check the approved Jira API endpoint and proxy access.`);
+    }
+    if (response.status < 200 || response.status >= 300) {
+      const detail = response.status === 400
+        ? "Jira rejected the request. Check the project name and JQL."
+        : response.status === 403
+          ? "This token may lack permission to browse the project or read issues and changelogs."
+          : "Check API access and the company network policy.";
       throw new Error(
-        `Jira returned an HTML page instead of JSON for ${url}. The Jira site URL may point to a login or proxy page. Use the Jira origin, such as https://company.atlassian.net. ${authHelp(this.settings.jiraEmail)}`
+        `Jira returned HTTP ${response.status}. ${detail} ${response.status === 401 ? authHelp(this.settings.jiraEmail) : ""}`.trim()
       );
     }
     try {
       return JSON.parse(response.text) as T;
     } catch {
       throw new Error(
-        `Jira returned a non-JSON response for ${url}. Check the Jira site URL and authentication method. ${authHelp(this.settings.jiraEmail)}`
+        `Jira returned a non-JSON response. Check the Jira API endpoint, authentication method, and company proxy. ${authHelp(this.settings.jiraEmail)}`
       );
     }
   }
 
-  async testConnection(): Promise<string> {
-    const user = await this.request<{ displayName?: string; emailAddress?: string }>(
-      "/rest/api/3/myself"
-    );
-    return user.displayName ?? user.emailAddress ?? "unknown user";
+  async testConnection(): Promise<JiraConnectionResult> {
+    const configuredProject = this.settings.jiraProjectKey.trim();
+    if (!configuredProject) throw new Error("Set the company Jira project key or exact name before testing the connection.");
+    const escapedProject = configuredProject.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const sample = await this.request<SearchResponse>(
+      this.deployment === "cloud" ? `${this.apiRoot}/search/jql` : `${this.apiRoot}/search`, {
+      method: "POST",
+      body: {
+        jql: `project = "${escapedProject}" ORDER BY updated DESC`,
+        maxResults: 1,
+        fields: ["summary"]
+      }
+    });
+    if (sample.issues?.[0]?.key) {
+      await this.getIssueStatusChanges(sample.issues[0].key);
+    }
+    return {
+      project: configuredProject,
+      ...(sample.issues?.[0]?.key ? { sampleIssueKey: sample.issues[0].key } : {})
+    };
   }
 
   private async findSprintFieldId(): Promise<string | undefined> {
     if (this.sprintFieldId !== undefined) return this.sprintFieldId ?? undefined;
     try {
-      const response = await this.request<JiraFieldSearchResponse>(
-        "/rest/api/3/field/search?query=Sprint&maxResults=50"
-      );
-      const sprintField = response.values?.find(
+      const fields = this.deployment === "cloud"
+        ? (await this.request<JiraFieldSearchResponse>(`${this.apiRoot}/field/search?query=Sprint&maxResults=50`)).values ?? []
+        : await this.request<NonNullable<JiraFieldSearchResponse["values"]>>(`${this.apiRoot}/field`);
+      const sprintField = fields.find(
         (field) =>
           field.name?.toLocaleLowerCase() === "sprint" ||
           field.schema?.custom?.includes("gh-sprint")
       );
       this.sprintFieldId = sprintField?.id ?? null;
+      if (this.deployment === "data-center") {
+        this.epicLinkFieldId = fields.find((field) => field.name?.toLocaleLowerCase() === "epic link")?.id ?? null;
+      }
     } catch {
       this.sprintFieldId = null;
+      if (this.deployment === "data-center") this.epicLinkFieldId = null;
     }
     return this.sprintFieldId ?? undefined;
   }
@@ -180,7 +240,10 @@ export class JiraClient {
       );
     }
     const escapedProject = project.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-    return value.replaceAll("{{project}}", escapedProject);
+    return value
+      .replaceAll('"{{project}}"', `"${escapedProject}"`)
+      .replaceAll("'{{project}}'", `"${escapedProject}"`)
+      .replaceAll("{{project}}", `"${escapedProject}"`);
   }
 
   async searchIssues(jql: string, limit: number): Promise<TicketFeatures[]> {
@@ -188,11 +251,13 @@ export class JiraClient {
     const resolvedJql = this.resolveJql(jql);
     const result: TicketFeatures[] = [];
     let nextPageToken: string | undefined;
+    let startAt = 0;
     const sprintFieldId = await this.findSprintFieldId();
 
     do {
       const pageSize = Math.min(100, limit - result.length);
-      const response = await this.request<SearchResponse>("/rest/api/3/search/jql", {
+      const response = await this.request<SearchResponse>(
+        this.deployment === "cloud" ? `${this.apiRoot}/search/jql` : `${this.apiRoot}/search`, {
         method: "POST",
         body: {
           jql: resolvedJql,
@@ -209,13 +274,18 @@ export class JiraClient {
             "created",
             "resolutiondate",
             "duedate",
-            ...(sprintFieldId ? [sprintFieldId] : [])
+            ...(sprintFieldId ? [sprintFieldId] : []),
+            ...(this.epicLinkFieldId ? [this.epicLinkFieldId] : [])
           ],
-          ...(nextPageToken ? { nextPageToken } : {})
+          ...(this.deployment === "cloud"
+            ? nextPageToken ? { nextPageToken } : {}
+            : { startAt })
         }
       });
 
       for (const issue of response.issues ?? []) {
+        const epicLink = this.epicLinkFieldId ? issue.fields[this.epicLinkFieldId] : undefined;
+        const parentKey = typeof epicLink === "string" ? epicLink : issue.fields.parent?.key;
         result.push({
           id: issue.id,
           key: issue.key,
@@ -232,9 +302,7 @@ export class JiraClient {
           ...(issue.fields.status?.statusCategory?.key
             ? { statusCategory: issue.fields.status.statusCategory.key }
             : {}),
-          ...(issue.fields.parent?.key
-            ? { parentKey: issue.fields.parent.key }
-            : {}),
+          ...(parentKey ? { parentKey } : {}),
           createdAt: issue.fields.created ?? new Date().toISOString(),
           sprintNames: sprintFieldId
             ? this.sprintNames(issue.fields[sprintFieldId])
@@ -259,8 +327,17 @@ export class JiraClient {
         if (result.length >= limit) break;
       }
 
-      nextPageToken = response.nextPageToken;
-      if (response.isLast || !nextPageToken || result.length >= limit) break;
+      if (this.deployment === "data-center") {
+        const count = response.issues?.length ?? 0;
+        startAt = (response.startAt ?? startAt) + count;
+        if (count === 0 || result.length >= limit || (response.total !== undefined && startAt >= response.total)) break;
+      } else {
+        nextPageToken = response.nextPageToken;
+        if (response.isLast || result.length >= limit) break;
+        if (!nextPageToken) {
+          throw new Error("Jira issue search did not provide a page token, so the result may be incomplete. Narrow the JQL query or retry.");
+        }
+      }
     } while (result.length < limit);
 
     return result;
@@ -271,11 +348,15 @@ export class JiraClient {
     if (epics.length > 30) {
       throw new Error("The epic query returned more than 30 epics. Narrow Epic JQL to keep the timeline readable.");
     }
+    if (this.deployment === "data-center" && epics.length > 0 && !this.epicLinkFieldId) {
+      throw new Error("Jira Data Center did not expose the Epic Link field. Ask your Jira administrator to make it available for issue search.");
+    }
     const groups = new Map<string, EpicGroup>();
     for (const epic of epics) groups.set(epic.key, { epic, children: [] });
     for (let offset = 0; offset < epics.length; offset += 20) {
       const keys = epics.slice(offset, offset + 20).map((epic) => epic.key);
-      const jql = `parent in (${keys.map((key) => `"${key.replace(/"/g, '\\"')}"`).join(", ")}) ORDER BY created ASC`;
+      const relation = this.deployment === "data-center" ? '"Epic Link"' : "parent";
+      const jql = `${relation} in (${keys.map((key) => `"${key.replace(/"/g, '\\"')}"`).join(", ")}) ORDER BY created ASC`;
       const children = await this.searchIssues(jql, 1001);
       if (children.length > 1000) {
         throw new Error("More than 1,000 children matched one epic batch. Narrow Epic JQL so no work is omitted.");
@@ -292,35 +373,46 @@ export class JiraClient {
   }
 
   async getIssueStatusChanges(issueKey: string): Promise<StatusChange[]> {
-    const result: StatusChange[] = [];
+    const histories: StatusHistory[] = [];
+    if (this.deployment === "data-center") {
+      const response = await this.request<DataCenterIssueResponse>(
+        `${this.apiRoot}/issue/${encodeURIComponent(issueKey)}?expand=changelog&fields=summary`
+      );
+      const changelog = response.changelog;
+      if (!changelog) throw new Error(`Jira did not return changelog history for ${issueKey}. Check issue permissions and the Data Center API response.`);
+      const values = changelog.histories ?? [];
+      if (changelog.total !== undefined && values.length < changelog.total) {
+        throw new Error(`Jira returned only ${values.length} of ${changelog.total} changelog entries for ${issueKey}. Forecast history would be incomplete.`);
+      }
+      histories.push(...values);
+    } else {
     let startAt = 0;
 
     while (true) {
       const response = await this.request<ChangelogResponse>(
-        `/rest/api/3/issue/${encodeURIComponent(issueKey)}/changelog?startAt=${startAt}&maxResults=100`
+        `${this.apiRoot}/issue/${encodeURIComponent(issueKey)}/changelog?startAt=${startAt}&maxResults=100`
       );
       const values = response.values ?? [];
-      for (const history of values) {
-        if (!history.created) continue;
-        for (const item of history.items ?? []) {
-          if (
-            item.field?.toLowerCase() !== "status" &&
-            item.fieldId?.toLowerCase() !== "status"
-          ) {
-            continue;
-          }
-          if (!item.fromString || !item.toString) continue;
-          result.push({
-            createdAt: history.created,
-            fromStatus: item.fromString,
-            toStatus: item.toString
-          });
-        }
-      }
+      histories.push(...values);
 
       const pageSize = response.maxResults ?? values.length;
       startAt += pageSize;
-      if (response.isLast || values.length === 0 || startAt >= (response.total ?? 0)) break;
+      if (response.isLast || values.length === 0 || (response.total !== undefined && startAt >= response.total)) break;
+    }
+    }
+
+    const result: StatusChange[] = [];
+    for (const history of histories) {
+      if (!history.created) continue;
+      for (const item of history.items ?? []) {
+        if (item.field?.toLowerCase() !== "status" && item.fieldId?.toLowerCase() !== "status") continue;
+        if (!item.fromString || !item.toString) continue;
+        result.push({
+          createdAt: history.created,
+          fromStatus: item.fromString,
+          toStatus: item.toString
+        });
+      }
     }
 
     return result.sort(

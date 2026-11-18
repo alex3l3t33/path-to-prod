@@ -1,4 +1,4 @@
-import { App, Notice, PluginSettingTab } from "obsidian";
+import { App, Notice, PluginSettingTab, SecretComponent } from "obsidian";
 import type { Setting, SettingDefinition, SettingDefinitionItem } from "obsidian";
 import type PathToProdPlugin from "./main";
 import type {
@@ -10,9 +10,11 @@ import type {
 
 export interface PathToProdSettings {
   jiraBaseUrl: string;
+  jiraDeployment: "auto" | "cloud" | "data-center";
   jiraTokenHolder: string;
   jiraEmail: string;
   jiraApiToken: string;
+  jiraTokenSecretId: string;
   jiraProjectKey: string;
   historyJql: string;
   goalJql: string;
@@ -46,9 +48,11 @@ export interface PathToProdSettings {
 
 export const DEFAULT_SETTINGS: PathToProdSettings = {
   jiraBaseUrl: "",
+  jiraDeployment: "auto",
   jiraTokenHolder: "",
   jiraEmail: "",
   jiraApiToken: "",
+  jiraTokenSecretId: "",
   jiraProjectKey: "",
   historyJql:
     'project = "{{project}}" AND statusCategory = Done ORDER BY resolved DESC',
@@ -186,13 +190,24 @@ export class PathToProdSettingTab extends PluginSettingTab {
     const title = (value: string) => `${value[0]?.toUpperCase()}${value.slice(1)}`;
 
     const jiraItems: SettingDefinition[] = [
-      item("Jira site URL", "Use the Jira root URL, for example https://company.atlassian.net, not a project or board URL.", (setting) =>
+      item("Jira site URL", "Use the company-approved HTTPS Jira API base URL. The token is sent to this host. A proxy path such as /jira is supported; do not enter a board or issue page.", (setting) =>
         setting.addText((text) =>
           text.setPlaceholder("https://company.atlassian.net").setValue(this.plugin.settings.jiraBaseUrl).onChange((value) => {
             this.plugin.settings.jiraBaseUrl = value.trim();
             void save();
           })
         )
+      ),
+      item("Jira deployment", "Auto uses Cloud for Atlassian hosts and Data Center/Server for other URLs. Choose Cloud manually if your company proxy hosts Jira Cloud on its own domain.", (setting) =>
+        setting.addDropdown((dropdown) => dropdown
+          .addOption("auto", "Auto detect")
+          .addOption("data-center", "Data center / server")
+          .addOption("cloud", "Atlassian cloud")
+          .setValue(this.plugin.settings.jiraDeployment)
+          .onChange((value) => {
+            this.plugin.settings.jiraDeployment = value as PathToProdSettings["jiraDeployment"];
+            void save();
+          }))
       ),
       item("Token holder", "Human-readable owner of the Atlassian API token.", (setting) =>
         setting.addText((text) =>
@@ -202,7 +217,7 @@ export class PathToProdSettingTab extends PluginSettingTab {
           })
         )
       ),
-      item("Atlassian email (optional)", "Required for an Atlassian Cloud API token. Leave blank to send the token as a Bearer credential.", (setting) =>
+      item("Atlassian email (optional)", "Leave blank when your Jira token works as a Bearer credential, as in a token-only Jira search setup. Atlassian Cloud API tokens using Basic authentication need the account email.", (setting) =>
         setting.addText((text) =>
           text.setValue(this.plugin.settings.jiraEmail).onChange((value) => {
             this.plugin.settings.jiraEmail = value.trim();
@@ -210,14 +225,13 @@ export class PathToProdSettingTab extends PluginSettingTab {
           })
         )
       ),
-      item("API or Bearer token", "Use a dedicated, revocable token. It is stored in this vault's local plugin data.", (setting) =>
-        setting.addText((text) => {
-          text.inputEl.type = "password";
-          text.setValue(this.plugin.settings.jiraApiToken).onChange((value) => {
-            this.plugin.settings.jiraApiToken = value.trim();
+      item("Jira token secret", "Select or create an Obsidian secret containing the Jira token. Only its secret name is saved in Path to Prod settings.", (setting) =>
+        setting.addComponent((el) => new SecretComponent(this.app, el)
+          .setValue(this.plugin.settings.jiraTokenSecretId)
+          .onChange((value) => {
+            this.plugin.settings.jiraTokenSecretId = value ?? "";
             void save();
-          });
-        })
+          }))
       ),
       item("Company Jira project", "Project key or exact project name used to replace {{project}} in JQL, for example ACME.", (setting) =>
         setting.addText((text) =>
@@ -227,13 +241,15 @@ export class PathToProdSettingTab extends PluginSettingTab {
           })
         )
       ),
-      item("Test Jira connection", undefined, (setting) =>
+      item("Test Jira connection", "Checks project issue search and, if an issue is found, changelog access used for forecasting. Proxy and SSO HTML is reported without displaying it.", (setting) =>
         setting.addButton((button) =>
           button.setButtonText("Test").onClick(async () => {
             button.setDisabled(true);
             try {
-              const name = await this.plugin.testJiraConnection();
-              new Notice(`Connected to Jira as ${name}.`);
+              const result = await this.plugin.testJiraConnection();
+              new Notice(result.sampleIssueKey
+                ? `Jira search and changelog work for ${result.project}; found ${result.sampleIssueKey}.`
+                : `Jira search accepted project ${result.project}, but returned no visible issues. Check the project name and permissions.`, 12000);
             } catch (error) {
               new Notice(error instanceof Error ? error.message : "Jira connection failed.");
             } finally {

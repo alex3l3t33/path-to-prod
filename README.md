@@ -31,19 +31,20 @@ To test in Obsidian, copy or symlink this directory into a development vault at 
 
 ## Configure
 
-1. Create a dedicated Jira credential: an Atlassian Cloud API token, OAuth/Bearer token, or Jira personal access token.
-2. Enter the Jira root URL (not a project or board URL), token holder, token, and company Jira project key or exact name. Leave email blank for Bearer authentication; Atlassian Cloud API tokens require the Atlassian account email and use Basic authentication.
-3. Set a completed-ticket JQL query and a goal JQL query. Use `{{project}}` to reference the configured company project key.
-4. Map the team's Jira statuses to development, staging, and production.
-5. Select Scrum, Kanban, or auto detection. For Scrum, set the sprint length and a known sprint start date.
-6. Add holidays, leave, capacity, focus factor, and release weekdays. Optionally add HTTPS ICS holiday feeds and one all-day leave feed per crew member.
-7. Open **Path to Prod**, sync history, and run the forecast.
+1. Create a dedicated Jira credential: a Jira Data Center/Server personal access token, an Atlassian Cloud API token, or another company-approved Bearer token.
+2. Enter the company-approved HTTPS Jira API URL (not a project or board page), token holder, and company Jira project key or exact name. Select or create an Obsidian secret for the token. **Auto detect** uses Data Center/Server REST API v2 for company-hosted URLs and Cloud REST API v3 for Atlassian hosts; select the deployment manually if your proxy uses a different hostname. Leave email blank for Data Center/Server personal access tokens or other Bearer authentication. Atlassian Cloud API tokens using Basic authentication require the Atlassian account email. Scoped Atlassian tokens use `https://api.atlassian.com/ex/jira/<cloudId>` as the API base URL.
+3. Use **Test Jira connection** to run project issue search and, if an issue is found, read its changelog as forecasting requires. A company proxy path such as `/jira` is supported in the base URL. A 407 error points to proxy authentication; HTML instead of JSON usually means a proxy, SSO, or login page is intercepting the API call. Ask your administrator to allow Obsidian access to the approved Jira API host and trust the required company TLS certificate. Do not put proxy credentials in the Jira token field. Data Center returns changelogs through `expand=changelog`; if the server truncates them, Path to Prod stops rather than forecasting from incomplete history.
+4. Set a completed-ticket JQL query and a goal JQL query. Use `{{project}}` to reference the configured company project key.
+5. Map the team's Jira statuses to development, staging, and production.
+6. Select Scrum, Kanban, or auto detection. For Scrum, set the sprint length and a known sprint start date.
+7. Add holidays, leave, capacity, focus factor, and release weekdays. Optionally add HTTPS ICS holiday feeds and one all-day leave feed per crew member.
+8. Open **Path to Prod**, sync history, and run the forecast.
 
 To forecast epics, set **Epic JQL** and open **Epic timeline**. Adjust the unrefined reserve for each epic as its scope becomes clearer. Set sprint length and the important-work target in the dashboard. Jira priorities and labels can mark work as important automatically, and each epic or child ticket can also be marked manually. The watch compares the *epic's* P80 production date with the target for its important scope; it is a signal to review the plan, not an individual ticket completion forecast. Kanban work without a Jira due date is shown as needing a target rather than given a sprint alert. Each epic uses the full configured team capacity independently, so simultaneous epic dates are not a combined portfolio commitment.
 
 Use **Email draft** on the goal or epic dashboard to open the default email client with a suggested subject and copy the current forecast for pasting into the draft. **Copy for email** only copies the report. Rich paste retains the colored environment cells; clients that only support plain text receive the same dates, ISO week numbers, and important-work alerts as text. The plugin does not send email or choose recipients.
 
-Path to Prod supports Basic authentication for Atlassian Cloud API tokens and Bearer authentication when the email field is blank. Credentials stay in the vault's local plugin data; use a revocable token and protect access to the vault.
+Path to Prod supports Basic authentication for Atlassian Cloud API tokens and Bearer authentication when the email field is blank, including Jira Data Center/Server personal access tokens. The Jira token is stored in Obsidian SecretStorage; the plugin data keeps only its secret name. Existing plaintext tokens are migrated when the plugin loads. Use a revocable token and protect access to the vault.
 
 ## Support
 
@@ -51,7 +52,7 @@ Path to Prod is free. If you would like to support ongoing development, you can 
 
 ## Privacy and network access
 
-Path to Prod makes network requests only to the configured Jira site and optional HTTPS ICS calendar feeds. Jira credentials, the token-holder variable, project key, and private calendar URLs are stored in the vault's local plugin data file. The plugin has no telemetry, analytics, advertising, or developer-operated server. Protect the vault and use dedicated, revocable credentials.
+Path to Prod initiates network requests to the configured Jira API host and optional HTTPS ICS calendar feeds. Obsidian's `requestUrl` handles these requests, so the plugin has no separate proxy service or proxy credential setting. Corporate proxy, VPN, certificate, and allowlist policy still apply to the app's network connection. The Jira token is stored in Obsidian SecretStorage; the token-holder label, project key, private calendar URLs, cached issue metadata, and crew leave dates are stored in the vault's local plugin data file. The plugin has no telemetry, analytics, advertising, or developer-operated server. Protect the vault and use dedicated, revocable credentials with the least Jira permissions that allow the required project and issues to be read. Do not sync the plugin data file to an untrusted location. Older copies or backups of `data.json` may still contain a token saved by earlier releases; remove or rotate those separately according to company policy.
 
 ## Forecast model
 
