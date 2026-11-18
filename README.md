@@ -16,7 +16,7 @@ Path to Prod is an Obsidian plugin that forecasts when a Jira goal will finish d
 - Auto-detects Scrum versus Kanban from Jira sprint metadata, with a manual override.
 - Aligns Scrum development to configurable 1–6 week sprint boundaries; Kanban stays continuous-flow and WIP-capacity based.
 - Accounts for weekdays, manual or ICS-synchronized holidays, crew leave, focus factor, parallel capacity, and production release days.
-- Keeps derived history and credentials in the local Obsidian plugin data file.
+- Stores the Jira token in Obsidian SecretStorage and keeps forecast history in the vault's local plugin data.
 
 Forecast dates are probabilistic planning aids, not commitments. Sparse history, workflow changes, unrecorded dependencies, and inaccurate calendar data can materially affect results.
 

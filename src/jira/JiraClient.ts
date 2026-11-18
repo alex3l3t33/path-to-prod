@@ -386,19 +386,19 @@ export class JiraClient {
       }
       histories.push(...values);
     } else {
-    let startAt = 0;
+      let startAt = 0;
 
-    while (true) {
-      const response = await this.request<ChangelogResponse>(
-        `${this.apiRoot}/issue/${encodeURIComponent(issueKey)}/changelog?startAt=${startAt}&maxResults=100`
-      );
-      const values = response.values ?? [];
-      histories.push(...values);
+      while (true) {
+        const response = await this.request<ChangelogResponse>(
+          `${this.apiRoot}/issue/${encodeURIComponent(issueKey)}/changelog?startAt=${startAt}&maxResults=100`
+        );
+        const values = response.values ?? [];
+        histories.push(...values);
 
-      const pageSize = response.maxResults ?? values.length;
-      startAt += pageSize;
-      if (response.isLast || values.length === 0 || (response.total !== undefined && startAt >= response.total)) break;
-    }
+        const pageSize = response.maxResults ?? values.length;
+        startAt += pageSize;
+        if (response.isLast || values.length === 0 || (response.total !== undefined && startAt >= response.total)) break;
+      }
     }
 
     const result: StatusChange[] = [];

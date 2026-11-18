@@ -1,9 +1,9 @@
 {
   "id": "path-to-prod",
   "name": "Path to Prod",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "minAppVersion": "1.13.0",
-  "description": "Forecast Jira goals and epics with calendars, sprint alerts, and shareable delivery timelines.",
+  "description": "Forecast Jira Cloud and Data Center goals and epics with calendars and delivery timelines.",
   "author": "Alexandre",
   "fundingUrl": {
     "Ko-fi": "https://ko-fi.com/alexandre42682"
